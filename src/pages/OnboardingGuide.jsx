@@ -4,10 +4,10 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { useTenant } from '../contexts/TenantContext.jsx';
 import { getItem } from '../utils/storage.js';
 import { filterByAccess } from '../utils/clearance.js';
-import { generateOnboardingGuide, MODEL } from '../utils/anthropic.js';
+import { generateOnboardingGuide, getModel, getProvider } from '../utils/anthropic.js';
 import { ClearanceBadge } from '../components/ClearanceBadge.jsx';
 import { OllamaError } from '../components/OllamaError.jsx';
-import { BookOpen, Sparkles, Loader, RefreshCw, User, Building2, FileText, Terminal } from 'lucide-react';
+import { BookOpen, Sparkles, Loader, RefreshCw, User, Building2, FileText, Terminal, Cloud } from 'lucide-react';
 
 const MarkdownBlock = ({ text }) => {
   if (!text) return null;
@@ -55,6 +55,8 @@ export const OnboardingGuide = () => {
 
   const docs = getItem(tenantId, 'documents', []);
   const accessibleDocs = filterByAccess(docs, user.clearance);
+  const model = getModel();
+  const provider = getProvider();
 
   const generate = async () => {
     setLoading(true);
@@ -77,17 +79,17 @@ export const OnboardingGuide = () => {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-5">
+    <div className="p-3 sm:p-6 max-w-3xl mx-auto space-y-4 sm:space-y-5">
       {/* User profile card */}
-      <div className="card p-5">
+      <div className="card p-4 sm:p-5">
         <div className="flex items-start justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-700 flex items-center justify-center text-xl font-bold text-white">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-700 flex items-center justify-center text-xl font-bold text-white flex-shrink-0">
               {user.name.charAt(0)}
             </div>
             <div>
               <h2 className="font-semibold text-slate-100">{user.name}</h2>
-              <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-400">
+              <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-400 flex-wrap">
                 <User className="w-3 h-3" />{user.role}
                 <span>·</span>
                 <Building2 className="w-3 h-3" />{user.department}
@@ -108,31 +110,31 @@ export const OnboardingGuide = () => {
         </div>
       </div>
 
-      {/* Error */}
       {error && <OllamaError error={error} />}
 
-      {/* Pre-generate state */}
       {!loading && !guide && !error && (
-        <div className="card p-8 text-center">
+        <div className="card p-6 sm:p-8 text-center">
           <div className="w-14 h-14 rounded-2xl bg-blue-600/20 flex items-center justify-center mx-auto mb-4">
             <BookOpen className="w-7 h-7 text-blue-400" />
           </div>
           <h3 className="text-base font-semibold text-slate-100 mb-2">Generate Your Personalised Onboarding Plan</h3>
           <p className="text-sm text-slate-400 mb-6 max-w-sm mx-auto">
-            {MODEL} will create a tailored 30-day guide based on your role ({user.role}),
+            <code className="text-blue-300">{model}</code> will create a tailored 30-day guide based on your role ({user.role}),
             department ({user.department}), and {user.clearance} clearance — referencing documents you can access.
           </p>
           <button onClick={generate} className="btn-primary inline-flex items-center gap-2 px-6 py-2.5">
             <Sparkles className="w-4 h-4" />
             Generate My Onboarding Guide
           </button>
-          <p className="text-xs text-slate-600 mt-3">
-            <Terminal className="w-3 h-3 inline mr-1" />Runs locally on <code>{MODEL}</code>
+          <p className="text-xs text-slate-600 mt-3 flex items-center justify-center gap-1">
+            {provider === 'openai'
+              ? <><Cloud className="w-3 h-3 inline" /> Powered by <code>{model}</code></>
+              : <><Terminal className="w-3 h-3 inline" /> Runs locally on <code>{model}</code></>
+            }
           </p>
         </div>
       )}
 
-      {/* Loading */}
       {loading && !guide && (
         <div className="card p-8 text-center">
           <Loader className="w-8 h-8 text-blue-400 animate-spin mx-auto mb-3" />
@@ -140,14 +142,13 @@ export const OnboardingGuide = () => {
         </div>
       )}
 
-      {/* Guide output */}
       {guide && (
-        <div className="card p-6">
-          <div className="flex items-center justify-between mb-5 pb-4 border-b border-slate-700">
+        <div className="card p-4 sm:p-6">
+          <div className="flex items-center justify-between mb-5 pb-4 border-b border-slate-700 flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-blue-400" />
               <span className="text-sm font-medium text-slate-300">AI-Generated Onboarding Plan</span>
-              <code className="text-xs text-slate-600">{MODEL}</code>
+              <code className="text-xs text-slate-600">{model}</code>
               {loading && <span className="text-xs text-slate-500 animate-pulse">generating…</span>}
             </div>
             {generated && (

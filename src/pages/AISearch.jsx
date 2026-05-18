@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { useTenant } from '../contexts/TenantContext.jsx';
 import { getItem, setItem } from '../utils/storage.js';
 import { filterByAccess } from '../utils/clearance.js';
-import { searchDocuments, MODEL } from '../utils/anthropic.js';
+import { searchDocuments, getModel, getProvider } from '../utils/anthropic.js';
 import { ClearanceBadge } from '../components/ClearanceBadge.jsx';
 import { OllamaError } from '../components/OllamaError.jsx';
 import { Search, Send, FileText, Loader, Cloud, Sparkles, Terminal, Trash2 } from 'lucide-react';
@@ -73,16 +73,17 @@ export const AISearch = () => {
   const [includeAzure, setIncludeAzure] = useState(false);
 
   const bottomRef = useRef(null);
+  const inputRef = useRef(null);
 
   const docs = getItem(tenantId, 'documents', []);
   const accessibleDocs = filterByAccess(docs, user.clearance);
+  const model = getModel();
+  const provider = getProvider();
 
-  // Persist messages whenever they change
   useEffect(() => {
     setItem(tenantId, storageKey, messages);
   }, [messages, tenantId, storageKey]);
 
-  // Scroll to bottom on new content
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, streamingText]);
@@ -121,6 +122,7 @@ export const AISearch = () => {
         id: Date.now(),
         query: q,
         response: fullText,
+        model,
         sourceDocs: accessibleDocs,
         timestamp: new Date().toISOString(),
       }]);
@@ -129,6 +131,7 @@ export const AISearch = () => {
     } finally {
       setStreamingText('');
       setLoading(false);
+      inputRef.current?.focus();
     }
   };
 
@@ -140,24 +143,29 @@ export const AISearch = () => {
   const isEmpty = messages.length === 0 && !loading && !error;
 
   return (
-    <div className="flex flex-col h-full max-w-4xl mx-auto p-6 gap-4">
+    <div className="flex flex-col h-full max-w-4xl mx-auto p-3 sm:p-6 gap-3 sm:gap-4">
       {/* Context banner */}
-      <div className="card p-3 flex items-center gap-3 text-xs text-slate-400 flex-shrink-0">
+      <div className="card p-3 flex items-center gap-2 text-xs text-slate-400 flex-shrink-0 flex-wrap">
         <Sparkles className="w-4 h-4 text-blue-400 flex-shrink-0" />
-        <span>
-          Searching <span className="text-slate-200 font-medium">{accessibleDocs.length}</span> documents at your{' '}
-          <ClearanceBadge level={user.clearance} size="xs" /> clearance · Model: <code className="text-blue-300">{MODEL}</code>
+        <span className="flex-1 min-w-0">
+          Searching <span className="text-slate-200 font-medium">{accessibleDocs.length}</span> docs at your{' '}
+          <ClearanceBadge level={user.clearance} size="xs" /> clearance
+          {' '}· <code className="text-blue-300">{model}</code>
         </span>
-        <span className="ml-auto flex items-center gap-2 text-slate-600">
-          <Terminal className="w-3 h-3" /> local
+        <span className="flex items-center gap-2 text-slate-600">
+          {provider === 'openai'
+            ? <Cloud className="w-3 h-3 text-green-500" />
+            : <Terminal className="w-3 h-3" />
+          }
+          <span className="hidden sm:inline">{provider}</span>
           {messages.length > 0 && (
             <button
               onClick={handleClear}
-              className="ml-2 flex items-center gap-1 text-slate-500 hover:text-red-400 transition-colors"
+              className="flex items-center gap-1 text-slate-500 hover:text-red-400 transition-colors"
               title="Clear chat history"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              <span>Clear</span>
+              <span className="hidden sm:inline">Clear</span>
             </button>
           )}
         </span>
@@ -165,7 +173,6 @@ export const AISearch = () => {
 
       {/* Chat history */}
       <div className="flex-1 overflow-y-auto space-y-4 min-h-0">
-        {/* Example queries — only shown when no history */}
         {isEmpty && (
           <div>
             <p className="text-xs text-slate-500 mb-2">Try asking:</p>
@@ -174,7 +181,7 @@ export const AISearch = () => {
                 <button
                   key={q}
                   onClick={() => handleSearch(q)}
-                  className="text-xs px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-400 hover:text-slate-200 transition-colors"
+                  className="text-xs px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-400 hover:text-slate-200 transition-colors text-left"
                 >
                   {q}
                 </button>
@@ -183,24 +190,21 @@ export const AISearch = () => {
           </div>
         )}
 
-        {/* Past messages */}
         {messages.map(msg => (
           <div key={msg.id} className="space-y-2">
-            {/* User query bubble */}
             <div className="flex justify-end">
-              <div className="max-w-xl bg-blue-600/20 border border-blue-500/30 rounded-2xl rounded-br-sm px-4 py-2.5 text-sm text-slate-200">
+              <div className="max-w-[85%] sm:max-w-xl bg-blue-600/20 border border-blue-500/30 rounded-2xl rounded-br-sm px-4 py-2.5 text-sm text-slate-200">
                 {msg.query}
               </div>
             </div>
 
-            {/* AI response */}
-            <div className="card p-4">
+            <div className="card p-3 sm:p-4">
               <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-700">
                 <div className="w-5 h-5 rounded-full bg-blue-600/30 flex items-center justify-center">
                   <Sparkles className="w-3 h-3 text-blue-400" />
                 </div>
                 <span className="text-xs text-slate-500">
-                  {MODEL} · {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {msg.model || model} · {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
               <MarkdownRenderer text={msg.response} />
@@ -222,20 +226,19 @@ export const AISearch = () => {
           </div>
         ))}
 
-        {/* Streaming in-progress response */}
         {loading && (
           <div className="space-y-2">
             <div className="flex justify-end">
-              <div className="max-w-xl bg-blue-600/20 border border-blue-500/30 rounded-2xl rounded-br-sm px-4 py-2.5 text-sm text-slate-200">
+              <div className="max-w-[85%] sm:max-w-xl bg-blue-600/20 border border-blue-500/30 rounded-2xl rounded-br-sm px-4 py-2.5 text-sm text-slate-200">
                 {activeQuery}
               </div>
             </div>
-            <div className="card p-4">
+            <div className="card p-3 sm:p-4">
               <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-700">
                 <div className="w-5 h-5 rounded-full bg-blue-600/30 flex items-center justify-center">
                   <Sparkles className="w-3 h-3 text-blue-400" />
                 </div>
-                <span className="text-xs text-slate-500">{MODEL}</span>
+                <span className="text-xs text-slate-500">{model}</span>
                 <Loader className="w-3 h-3 animate-spin text-blue-400 ml-auto" />
               </div>
               {streamingText ? (
@@ -249,19 +252,19 @@ export const AISearch = () => {
           </div>
         )}
 
-        {/* Error */}
         {error && <OllamaError error={error} />}
 
         <div ref={bottomRef} />
       </div>
 
-      {/* Input bar — pinned to bottom */}
-      <div className="card p-4 flex-shrink-0">
+      {/* Input bar */}
+      <div className="card p-3 sm:p-4 flex-shrink-0">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <input
-              className="input pl-9"
+              ref={inputRef}
+              className="input pl-9 text-sm"
               placeholder="Ask anything about your company's documents…"
               value={query}
               onChange={e => setQuery(e.target.value)}
@@ -271,10 +274,10 @@ export const AISearch = () => {
           <button
             onClick={() => handleSearch()}
             disabled={loading || !query.trim()}
-            className="btn-primary px-5 flex items-center gap-2"
+            className="btn-primary px-3 sm:px-5 flex items-center gap-2 flex-shrink-0"
           >
             {loading ? <Loader className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            {loading ? 'Thinking…' : 'Ask'}
+            <span className="hidden sm:inline">{loading ? 'Thinking…' : 'Ask'}</span>
           </button>
         </div>
         <div className="flex items-center gap-3 mt-3 pt-3 border-t border-slate-700">

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Outlet, Navigate, useParams, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar.jsx';
 import { Header } from './Header.jsx';
@@ -18,6 +19,7 @@ export const Shell = ({ children }) => {
   const { tenantId, page } = useParams();
   const location = useLocation();
   const currentPage = page || location.pathname.split('/').pop();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (loading) {
     return (
@@ -33,9 +35,13 @@ export const Shell = ({ children }) => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-950">
-      <Sidebar />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <Header title={meta.title} subtitle={meta.subtitle} />
+        <Header
+          title={meta.title}
+          subtitle={meta.subtitle}
+          onMenuClick={() => setSidebarOpen(true)}
+        />
         <main className="flex-1 overflow-y-auto">
           {children || <Outlet />}
         </main>

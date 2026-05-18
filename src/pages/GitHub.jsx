@@ -295,7 +295,7 @@ export const GitHub = () => {
 
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-4">
+    <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-4">
 
       {/* ── Repo input ── */}
       <div className="card p-4">
@@ -371,7 +371,7 @@ export const GitHub = () => {
 
       {/* ── Browser + file viewer ── */}
       {tree && (
-        <div className="grid grid-cols-[240px_1fr] gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-4">
 
           {/* File tree */}
           <div className="card p-3 overflow-y-auto max-h-[520px]">

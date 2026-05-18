@@ -95,7 +95,7 @@ export const AzureDevOps = () => {
   ];
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-4">
+    <div className="p-3 sm:p-6 max-w-6xl mx-auto space-y-4">
       {/* Header */}
       <div className="card p-4 flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
@@ -146,7 +146,7 @@ export const AzureDevOps = () => {
       {project && (
         <>
           {/* Tabs */}
-          <div className="flex gap-1 border-b border-slate-800">
+          <div className="flex gap-1 border-b border-slate-800 overflow-x-auto">
             {tabs.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}

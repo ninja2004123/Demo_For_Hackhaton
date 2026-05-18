@@ -1,13 +1,25 @@
 /**
- * LLM utility — Ollama backend (llama3.1:8b)
- * Drops-in for the Anthropic SDK: identical function signatures,
- * same streaming onChunk callbacks.
+ * LLM utility — supports Ollama (local) and OpenAI
+ * All public functions keep identical signatures regardless of provider.
  */
 
-const OLLAMA_BASE = 'http://localhost:11434';
-export const MODEL = 'llama3.1:8b';
+const PROVIDER_STORAGE_KEY = 'ai_provider';
+const OLLAMA_BASE = '';
 
-// ── Health check ──────────────────────────────────────────────────────────────
+export const OLLAMA_MODEL = 'llama3.1:8b';
+export const OPENAI_MODEL = 'gpt-4o-mini';
+
+export const getProvider = () =>
+  localStorage.getItem(PROVIDER_STORAGE_KEY) ||
+  import.meta.env.VITE_DEFAULT_AI_PROVIDER ||
+  (import.meta.env.VITE_OPENAI_API_KEY ? 'openai' : 'ollama');
+
+export const setProvider = (p) => localStorage.setItem(PROVIDER_STORAGE_KEY, p);
+
+export const getModel = () =>
+  getProvider() === 'openai' ? OPENAI_MODEL : OLLAMA_MODEL;
+
+// ── Health checks ─────────────────────────────────────────────────────────────
 
 export const checkOllama = async () => {
   try {
@@ -26,9 +38,11 @@ export const checkOllama = async () => {
   }
 };
 
-// ── Core streaming helper ─────────────────────────────────────────────────────
+export const hasOpenAIKey = () => Boolean(import.meta.env.VITE_OPENAI_API_KEY);
 
-const streamChat = async ({ system, user: userMsg, onChunk }) => {
+// ── Streaming backends ────────────────────────────────────────────────────────
+
+const streamChatOllama = async ({ system, user: userMsg, onChunk }) => {
   const messages = [];
   if (system) messages.push({ role: 'system', content: system });
   messages.push({ role: 'user', content: userMsg });
@@ -38,7 +52,7 @@ const streamChat = async ({ system, user: userMsg, onChunk }) => {
     res = await fetch(`${OLLAMA_BASE}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: MODEL, messages, stream: true }),
+      body: JSON.stringify({ model: OLLAMA_MODEL, messages, stream: true }),
     });
   } catch {
     throw new Error('NO_OLLAMA');
@@ -46,7 +60,6 @@ const streamChat = async ({ system, user: userMsg, onChunk }) => {
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    // Model not found
     if (res.status === 404 || body.includes('model') || body.includes('not found')) {
       throw new Error('NO_MODEL');
     }
@@ -68,12 +81,69 @@ const streamChat = async ({ system, user: userMsg, onChunk }) => {
       try {
         const json = JSON.parse(line);
         if (json.message?.content) onChunk(json.message.content);
-      } catch { /* partial JSON, skip */ }
+      } catch { /* partial JSON */ }
     }
   }
 };
 
-// ── Public API (same signatures as the Anthropic version) ─────────────────────
+const streamChatOpenAI = async ({ system, user: userMsg, onChunk }) => {
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  if (!apiKey) throw new Error('OPENAI_KEY_MISSING');
+
+  const messages = [];
+  if (system) messages.push({ role: 'system', content: system });
+  messages.push({ role: 'user', content: userMsg });
+
+  let res;
+  try {
+    res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({ model: OPENAI_MODEL, messages, stream: true }),
+    });
+  } catch {
+    throw new Error('OPENAI_NETWORK_ERROR');
+  }
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    if (res.status === 401) throw new Error('OPENAI_INVALID_KEY');
+    if (res.status === 429) throw new Error('OPENAI_RATE_LIMIT');
+    throw new Error(`OpenAI error ${res.status}: ${body}`);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const data = line.slice(6).trim();
+      if (data === '[DONE]') return;
+      try {
+        const json = JSON.parse(data);
+        const content = json.choices?.[0]?.delta?.content;
+        if (content) onChunk(content);
+      } catch { /* skip */ }
+    }
+  }
+};
+
+const streamChat = (args) =>
+  getProvider() === 'openai'
+    ? streamChatOpenAI(args)
+    : streamChatOllama(args);
+
+// ── Public API ────────────────────────────────────────────────────────────────
 
 export const searchDocuments = async ({
   query, documents, userClearance, companyName,
