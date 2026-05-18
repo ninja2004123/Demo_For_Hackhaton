@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  body {
+    @apply bg-slate-950 text-slate-100 antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-slate-900; }
+  ::-webkit-scrollbar-thumb { @apply bg-slate-600 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-slate-500; }
+}
+
+@layer components {
+  .card { @apply bg-slate-800 border border-slate-700 rounded-xl; }
+  .btn-primary { @apply bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-secondary { @apply bg-slate-700 hover:bg-slate-600 text-slate-100 font-medium px-4 py-2 rounded-lg transition-colors; }
+  .btn-danger { @apply bg-red-700 hover:bg-red-600 text-white font-medium px-4 py-2 rounded-lg transition-colors; }
+  .input { @apply bg-slate-900 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 w-full focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-slate-500; }
+  .select { @apply bg-slate-900 border border-slate-600 text-slate-100 rounded-lg px-3 py-2 w-full focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500; }
+  .badge { @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold; }
+  .nav-link { @apply flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-700/50 transition-all text-sm font-medium; }
+  .nav-link.active { @apply text-blue-400 bg-blue-500/10 hover:text-blue-300; }
+}
+
+.typing-cursor::after {
+  content: '▋';
+  animation: blink 1s infinite;
+  color: #3b82f6;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.prose-dark {
+  @apply text-slate-300 leading-relaxed;
+}
+.prose-dark h1, .prose-dark h2, .prose-dark h3 {
+  @apply text-slate-100 font-semibold;
+}
+.prose-dark strong { @apply text-slate-100 font-semibold; }
+.prose-dark code { @apply bg-slate-700 text-blue-300 px-1 py-0.5 rounded text-sm font-mono; }
+.prose-dark pre { @apply bg-slate-900 border border-slate-700 rounded-lg p-4 overflow-x-auto; }
+.prose-dark pre code { @apply bg-transparent text-slate-300 px-0 py-0; }

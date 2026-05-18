@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(curl *)",
+      "Bash(lspci)",
+      "Bash(ollama --version)",
+      "Bash(ollama list *)",
+      "Bash(export PATH=\"$HOME/.local/bin:$PATH\")",
+      "Bash(VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_icd.x86_64.json ~/.local/bin/ollama serve)",
+      "Bash(echo \"PID: $!\")",
+      "Read(//tmp/**)",
+      "Bash(pkill -9 -f \"ollama\")",
+      "Bash(OLLAMA_VULKAN=1 VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_icd.x86_64.json ~/.local/bin/ollama serve)"
+    ]
+  }
+}
