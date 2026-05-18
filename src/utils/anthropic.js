@@ -1,5 +1,5 @@
 /**
- * LLM utility — supports Ollama (local) and Google Gemini (AI Studio)
+ * LLM utility — supports Ollama (local) and OpenRouter (cloud)
  * All public functions keep identical signatures regardless of provider.
  */
 
@@ -7,17 +7,17 @@ const PROVIDER_STORAGE_KEY = 'ai_provider';
 const OLLAMA_BASE = '';
 
 export const OLLAMA_MODEL = 'llama3.1:8b';
-export const GEMINI_MODEL = 'gemini-2.0-flash';
+export const OPENROUTER_MODEL = 'deepseek/deepseek-chat-v3-0324:free';
 
 export const getProvider = () =>
   localStorage.getItem(PROVIDER_STORAGE_KEY) ||
   import.meta.env.VITE_DEFAULT_AI_PROVIDER ||
-  (import.meta.env.VITE_GEMINI_API_KEY ? 'gemini' : 'ollama');
+  (import.meta.env.VITE_OPENROUTER_API_KEY ? 'openrouter' : 'ollama');
 
 export const setProvider = (p) => localStorage.setItem(PROVIDER_STORAGE_KEY, p);
 
 export const getModel = () =>
-  getProvider() === 'gemini' ? GEMINI_MODEL : OLLAMA_MODEL;
+  getProvider() === 'openrouter' ? OPENROUTER_MODEL : OLLAMA_MODEL;
 
 // ── Health checks ─────────────────────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ export const checkOllama = async () => {
   }
 };
 
-export const hasGeminiKey = () => Boolean(import.meta.env.VITE_GEMINI_API_KEY);
+export const hasOpenRouterKey = () => Boolean(import.meta.env.VITE_OPENROUTER_API_KEY);
 
 // ── Streaming backends ────────────────────────────────────────────────────────
 
@@ -86,37 +86,35 @@ const streamChatOllama = async ({ system, user: userMsg, onChunk }) => {
   }
 };
 
-const streamChatGemini = async ({ system, user: userMsg, onChunk }) => {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!apiKey) throw new Error('GEMINI_KEY_MISSING');
+const streamChatOpenRouter = async ({ system, user: userMsg, onChunk }) => {
+  const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+  if (!apiKey) throw new Error('OPENROUTER_KEY_MISSING');
 
-  const body = {
-    contents: [{ role: 'user', parts: [{ text: userMsg }] }],
-  };
-  if (system) {
-    body.systemInstruction = { parts: [{ text: system }] };
-  }
+  const messages = [];
+  if (system) messages.push({ role: 'system', content: system });
+  messages.push({ role: 'user', content: userMsg });
 
   let res;
   try {
-    res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      }
-    );
+    res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': window.location.origin,
+        'X-Title': 'NexusIQ',
+      },
+      body: JSON.stringify({ model: OPENROUTER_MODEL, messages, stream: true }),
+    });
   } catch {
-    throw new Error('GEMINI_NETWORK_ERROR');
+    throw new Error('OPENROUTER_NETWORK_ERROR');
   }
 
   if (!res.ok) {
-    const bodyText = await res.text().catch(() => '');
-    if (res.status === 400) throw new Error('GEMINI_INVALID_REQUEST');
-    if (res.status === 403) throw new Error('GEMINI_INVALID_KEY');
-    if (res.status === 429) throw new Error('GEMINI_RATE_LIMIT');
-    throw new Error(`Gemini error ${res.status}: ${bodyText}`);
+    const body = await res.text().catch(() => '');
+    if (res.status === 401) throw new Error('OPENROUTER_INVALID_KEY');
+    if (res.status === 429) throw new Error('OPENROUTER_RATE_LIMIT');
+    throw new Error(`OpenRouter error ${res.status}: ${body}`);
   }
 
   const reader = res.body.getReader();
@@ -132,19 +130,19 @@ const streamChatGemini = async ({ system, user: userMsg, onChunk }) => {
     for (const line of lines) {
       if (!line.startsWith('data: ')) continue;
       const data = line.slice(6).trim();
-      if (!data || data === '[DONE]') continue;
+      if (data === '[DONE]') return;
       try {
         const json = JSON.parse(data);
-        const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) onChunk(text);
+        const content = json.choices?.[0]?.delta?.content;
+        if (content) onChunk(content);
       } catch { /* skip */ }
     }
   }
 };
 
 const streamChat = (args) =>
-  getProvider() === 'gemini'
-    ? streamChatGemini(args)
+  getProvider() === 'openrouter'
+    ? streamChatOpenRouter(args)
     : streamChatOllama(args);
 
 // ── Public API ────────────────────────────────────────────────────────────────
