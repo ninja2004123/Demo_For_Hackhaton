@@ -106,7 +106,7 @@ export const CompanySelector = () => {
             <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center">
               <ShieldCheck className="w-6 h-6 text-white" />
             </div>
-            <span className="text-2xl font-bold text-slate-100 tracking-tight">NexusIQ</span>
+            <span className="text-2xl font-bold text-slate-100 tracking-tight">Vault</span>
           </div>
           <p className="text-slate-400 text-sm">Multi-tenant Enterprise Intelligence Platform</p>
           <div className="flex items-center justify-center gap-6 mt-4 text-xs text-slate-600">

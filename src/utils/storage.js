@@ -1,4 +1,4 @@
-const PREFIX = 'nexusiq';
+const PREFIX = 'vault';
 
 export const storageKey = (tenantId, key) => `${PREFIX}:${tenantId}:${key}`;
 

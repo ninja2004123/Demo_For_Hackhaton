@@ -56,7 +56,7 @@ export const Sidebar = ({ open, onClose }) => {
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
             <div>
-              <div className="text-sm font-bold text-slate-100 tracking-wide">NexusIQ</div>
+              <div className="text-sm font-bold text-slate-100 tracking-wide">Vault</div>
               <div className="text-xs text-slate-500 truncate max-w-[120px]">{currentTenant?.name || 'Platform'}</div>
             </div>
           </div>

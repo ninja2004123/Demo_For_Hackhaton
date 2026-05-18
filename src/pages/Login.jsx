@@ -44,7 +44,7 @@ export const Login = () => {
             >
               {company?.logo || <ShieldCheck className="w-6 h-6" />}
             </div>
-            <span className="text-xl font-bold text-slate-100">{company?.name || 'NexusIQ'}</span>
+            <span className="text-xl font-bold text-slate-100">{company?.name || 'Vault'}</span>
           </div>
           <p className="text-sm text-slate-400">Sign in to your workspace</p>
         </div>

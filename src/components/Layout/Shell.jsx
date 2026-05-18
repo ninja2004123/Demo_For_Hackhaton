@@ -31,7 +31,7 @@ export const Shell = ({ children }) => {
 
   if (!user) return <Navigate to={`/${tenantId}/login`} replace />;
 
-  const meta = PAGE_META[currentPage] || { title: 'NexusIQ', subtitle: '' };
+  const meta = PAGE_META[currentPage] || { title: 'Vault', subtitle: '' };
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-950">

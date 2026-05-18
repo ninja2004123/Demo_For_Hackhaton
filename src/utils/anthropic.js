@@ -1,5 +1,5 @@
 /**
- * LLM utility — supports Ollama (local) and OpenRouter (cloud)
+ * LLM utility — supports Ollama (local) and OpenAI
  * All public functions keep identical signatures regardless of provider.
  */
 
@@ -7,17 +7,17 @@ const PROVIDER_STORAGE_KEY = 'ai_provider';
 const OLLAMA_BASE = '';
 
 export const OLLAMA_MODEL = 'llama3.1:8b';
-export const OPENROUTER_MODEL = 'deepseek/deepseek-v4-flash:free';
+export const OPENAI_MODEL = 'gpt-4o-mini';
 
 export const getProvider = () =>
   localStorage.getItem(PROVIDER_STORAGE_KEY) ||
   import.meta.env.VITE_DEFAULT_AI_PROVIDER ||
-  (import.meta.env.VITE_OPENROUTER_API_KEY ? 'openrouter' : 'ollama');
+  (import.meta.env.VITE_OPENAI_API_KEY ? 'openai' : 'ollama');
 
 export const setProvider = (p) => localStorage.setItem(PROVIDER_STORAGE_KEY, p);
 
 export const getModel = () =>
-  getProvider() === 'openrouter' ? OPENROUTER_MODEL : OLLAMA_MODEL;
+  getProvider() === 'openai' ? OPENAI_MODEL : OLLAMA_MODEL;
 
 // ── Health checks ─────────────────────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ export const checkOllama = async () => {
   }
 };
 
-export const hasOpenRouterKey = () => Boolean(import.meta.env.VITE_OPENROUTER_API_KEY);
+export const hasOpenAIKey = () => Boolean(import.meta.env.VITE_OPENAI_API_KEY);
 
 // ── Streaming backends ────────────────────────────────────────────────────────
 
@@ -86,9 +86,9 @@ const streamChatOllama = async ({ system, user: userMsg, onChunk }) => {
   }
 };
 
-const streamChatOpenRouter = async ({ system, user: userMsg, onChunk }) => {
-  const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-  if (!apiKey) throw new Error('OPENROUTER_KEY_MISSING');
+const streamChatOpenAI = async ({ system, user: userMsg, onChunk }) => {
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  if (!apiKey) throw new Error('OPENAI_KEY_MISSING');
 
   const messages = [];
   if (system) messages.push({ role: 'system', content: system });
@@ -96,25 +96,23 @@ const streamChatOpenRouter = async ({ system, user: userMsg, onChunk }) => {
 
   let res;
   try {
-    res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': window.location.origin,
-        'X-Title': 'NexusIQ',
       },
-      body: JSON.stringify({ model: OPENROUTER_MODEL, messages, stream: true }),
+      body: JSON.stringify({ model: OPENAI_MODEL, messages, stream: true }),
     });
   } catch {
-    throw new Error('OPENROUTER_NETWORK_ERROR');
+    throw new Error('OPENAI_NETWORK_ERROR');
   }
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    if (res.status === 401) throw new Error('OPENROUTER_INVALID_KEY');
-    if (res.status === 429) throw new Error('OPENROUTER_RATE_LIMIT');
-    throw new Error(`OpenRouter error ${res.status}: ${body}`);
+    if (res.status === 401) throw new Error('OPENAI_INVALID_KEY');
+    if (res.status === 429) throw new Error('OPENAI_RATE_LIMIT');
+    throw new Error(`OpenAI error ${res.status}: ${body}`);
   }
 
   const reader = res.body.getReader();
@@ -141,8 +139,8 @@ const streamChatOpenRouter = async ({ system, user: userMsg, onChunk }) => {
 };
 
 const streamChat = (args) =>
-  getProvider() === 'openrouter'
-    ? streamChatOpenRouter(args)
+  getProvider() === 'openai'
+    ? streamChatOpenAI(args)
     : streamChatOllama(args);
 
 // ── Public API ────────────────────────────────────────────────────────────────

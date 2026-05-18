@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Menu, Terminal, Cloud, RefreshCw, ChevronDown, Check } from 'lucide-react';
-import { checkOllama, getProvider, setProvider, getModel, hasOpenRouterKey, OLLAMA_MODEL, OPENROUTER_MODEL } from '../../utils/anthropic.js';
+import { checkOllama, getProvider, setProvider, getModel, hasOpenAIKey, OLLAMA_MODEL, OPENAI_MODEL } from '../../utils/anthropic.js';
 import { useTenant } from '../../contexts/TenantContext.jsx';
 
 // ── Ollama status dot (only shown when provider = ollama) ─────────────────────
@@ -81,7 +81,7 @@ const ProviderToggle = () => {
   const [provider, setProviderState] = useState(getProvider);
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-  const keyAvailable = hasOpenRouterKey();
+  const keyAvailable = hasOpenAIKey();
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -98,7 +98,7 @@ const ProviderToggle = () => {
     window.location.reload();
   };
 
-  const isOpenRouter = provider === 'openrouter';
+  const isOpenAI = provider === 'openai';
 
   return (
     <div className="relative" ref={ref}>
@@ -107,16 +107,16 @@ const ProviderToggle = () => {
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 transition-colors"
         title="Switch AI provider"
       >
-        {isOpenRouter
-          ? <Cloud className="w-3 h-3 text-violet-400" />
+        {isOpenAI
+          ? <Cloud className="w-3 h-3 text-green-400" />
           : <Terminal className="w-3 h-3 text-blue-400" />
         }
-        <span className="hidden sm:inline">{isOpenRouter ? 'deepseek-v3' : OLLAMA_MODEL}</span>
+        <span className="hidden sm:inline">{isOpenAI ? OPENAI_MODEL : OLLAMA_MODEL}</span>
         <ChevronDown className="w-3 h-3 text-slate-500" />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-56 z-50 card p-1 shadow-xl border-slate-600">
+        <div className="absolute right-0 top-full mt-1.5 w-52 z-50 card p-1 shadow-xl border-slate-600">
           <p className="px-3 py-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">AI Provider</p>
 
           <button
@@ -128,22 +128,22 @@ const ProviderToggle = () => {
               <p className="text-slate-200 font-medium">Ollama (local)</p>
               <p className="text-slate-500">{OLLAMA_MODEL}</p>
             </div>
-            {!isOpenRouter && <Check className="w-3.5 h-3.5 text-blue-400" />}
+            {!isOpenAI && <Check className="w-3.5 h-3.5 text-blue-400" />}
           </button>
 
           <button
-            onClick={() => keyAvailable && switchTo('openrouter')}
+            onClick={() => keyAvailable && switchTo('openai')}
             className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg transition-colors text-left ${
               keyAvailable ? 'hover:bg-slate-700' : 'opacity-50 cursor-not-allowed'
             }`}
-            title={keyAvailable ? undefined : 'Set VITE_OPENROUTER_API_KEY to enable'}
+            title={keyAvailable ? undefined : 'Set VITE_OPENAI_API_KEY to enable'}
           >
-            <Cloud className="w-3.5 h-3.5 text-violet-400 flex-shrink-0" />
+            <Cloud className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-slate-200 font-medium">OpenRouter (free)</p>
-              <p className="text-slate-500 truncate">{OPENROUTER_MODEL.split('/')[1]}{!keyAvailable ? ' · no key' : ''}</p>
+              <p className="text-slate-200 font-medium">OpenAI</p>
+              <p className="text-slate-500">{OPENAI_MODEL}{!keyAvailable ? ' · no key' : ''}</p>
             </div>
-            {isOpenRouter && <Check className="w-3.5 h-3.5 text-violet-400" />}
+            {isOpenAI && <Check className="w-3.5 h-3.5 text-green-400" />}
           </button>
         </div>
       )}

@@ -11,7 +11,7 @@ export const AuthProvider = ({ tenantId, children }) => {
   useEffect(() => {
     if (!tenantId) { setLoading(false); return; }
     seedTenant(tenantId);
-    const saved = sessionStorage.getItem(`nexusiq:session:${tenantId}`);
+    const saved = sessionStorage.getItem(`vault:session:${tenantId}`);
     if (saved) {
       try { setUser(JSON.parse(saved)); } catch { /* ignore */ }
     }
@@ -24,7 +24,7 @@ export const AuthProvider = ({ tenantId, children }) => {
     if (!found) return { success: false, error: 'Invalid email or password' };
     const { password: _, ...safeUser } = found;
     setUser(safeUser);
-    sessionStorage.setItem(`nexusiq:session:${tenantId}`, JSON.stringify(safeUser));
+    sessionStorage.setItem(`vault:session:${tenantId}`, JSON.stringify(safeUser));
     return { success: true };
   };
 
@@ -46,13 +46,13 @@ export const AuthProvider = ({ tenantId, children }) => {
     setItem(tenantId, 'users', [...users, newUser]);
     const { password: _, ...safeUser } = newUser;
     setUser(safeUser);
-    sessionStorage.setItem(`nexusiq:session:${tenantId}`, JSON.stringify(safeUser));
+    sessionStorage.setItem(`vault:session:${tenantId}`, JSON.stringify(safeUser));
     return { success: true };
   };
 
   const logout = () => {
     setUser(null);
-    sessionStorage.removeItem(`nexusiq:session:${tenantId}`);
+    sessionStorage.removeItem(`vault:session:${tenantId}`);
   };
 
   const updateUserClearance = (userId, clearance) => {
@@ -62,7 +62,7 @@ export const AuthProvider = ({ tenantId, children }) => {
     if (user?.id === userId) {
       const newUser = { ...user, clearance };
       setUser(newUser);
-      sessionStorage.setItem(`nexusiq:session:${tenantId}`, JSON.stringify(newUser));
+      sessionStorage.setItem(`vault:session:${tenantId}`, JSON.stringify(newUser));
     }
   };
 

@@ -153,8 +153,8 @@ export const AISearch = () => {
           {' '}· <code className="text-blue-300">{model}</code>
         </span>
         <span className="flex items-center gap-2 text-slate-600">
-          {provider === 'openrouter'
-            ? <Cloud className="w-3 h-3 text-violet-400" />
+          {provider === 'openai'
+            ? <Cloud className="w-3 h-3 text-green-500" />
             : <Terminal className="w-3 h-3" />
           }
           <span className="hidden sm:inline">{provider}</span>
