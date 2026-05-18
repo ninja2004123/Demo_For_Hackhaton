@@ -15,7 +15,8 @@
       "Bash(OLLAMA_VULKAN=1 VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/intel_icd.x86_64.json ~/.local/bin/ollama serve)",
       "Bash(xargs ls -la)",
       "WebFetch(domain:www.helixai.space)",
-      "WebFetch(domain:freellm.net)"
+      "WebFetch(domain:freellm.net)",
+      "WebFetch(domain:openrouter.ai)"
     ]
   }
 }

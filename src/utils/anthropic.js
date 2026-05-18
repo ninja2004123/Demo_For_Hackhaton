@@ -7,7 +7,7 @@ const PROVIDER_STORAGE_KEY = 'ai_provider';
 const OLLAMA_BASE = '';
 
 export const OLLAMA_MODEL = 'llama3.1:8b';
-export const OPENROUTER_MODEL = 'deepseek/deepseek-chat-v3-0324:free';
+export const OPENROUTER_MODEL = 'deepseek/deepseek-v4-flash:free';
 
 export const getProvider = () =>
   localStorage.getItem(PROVIDER_STORAGE_KEY) ||
