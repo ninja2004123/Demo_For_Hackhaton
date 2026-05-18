@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Menu, Terminal, Cloud, RefreshCw, ChevronDown, Check } from 'lucide-react';
-import { checkOllama, getProvider, setProvider, getModel, hasOpenAIKey, OLLAMA_MODEL, OPENAI_MODEL } from '../../utils/anthropic.js';
+import { checkOllama, getProvider, setProvider, getModel, hasGeminiKey, OLLAMA_MODEL, GEMINI_MODEL } from '../../utils/anthropic.js';
 import { useTenant } from '../../contexts/TenantContext.jsx';
 
 // ── Ollama status dot (only shown when provider = ollama) ─────────────────────
@@ -81,7 +81,7 @@ const ProviderToggle = () => {
   const [provider, setProviderState] = useState(getProvider);
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-  const keyAvailable = hasOpenAIKey();
+  const keyAvailable = hasGeminiKey();
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -98,7 +98,7 @@ const ProviderToggle = () => {
     window.location.reload();
   };
 
-  const isOpenAI = provider === 'openai';
+  const isGemini = provider === 'gemini';
 
   return (
     <div className="relative" ref={ref}>
@@ -107,11 +107,11 @@ const ProviderToggle = () => {
         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 transition-colors"
         title="Switch AI provider"
       >
-        {isOpenAI
-          ? <Cloud className="w-3 h-3 text-green-400" />
+        {isGemini
+          ? <Cloud className="w-3 h-3 text-blue-400" />
           : <Terminal className="w-3 h-3 text-blue-400" />
         }
-        <span className="hidden sm:inline">{isOpenAI ? OPENAI_MODEL : OLLAMA_MODEL}</span>
+        <span className="hidden sm:inline">{isGemini ? GEMINI_MODEL : OLLAMA_MODEL}</span>
         <ChevronDown className="w-3 h-3 text-slate-500" />
       </button>
 
@@ -128,22 +128,22 @@ const ProviderToggle = () => {
               <p className="text-slate-200 font-medium">Ollama (local)</p>
               <p className="text-slate-500">{OLLAMA_MODEL}</p>
             </div>
-            {!isOpenAI && <Check className="w-3.5 h-3.5 text-blue-400" />}
+            {!isGemini && <Check className="w-3.5 h-3.5 text-blue-400" />}
           </button>
 
           <button
-            onClick={() => keyAvailable && switchTo('openai')}
+            onClick={() => keyAvailable && switchTo('gemini')}
             className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg transition-colors text-left ${
               keyAvailable ? 'hover:bg-slate-700' : 'opacity-50 cursor-not-allowed'
             }`}
-            title={keyAvailable ? undefined : 'Set VITE_OPENAI_API_KEY to enable'}
+            title={keyAvailable ? undefined : 'Set VITE_GEMINI_API_KEY to enable'}
           >
-            <Cloud className="w-3.5 h-3.5 text-green-400 flex-shrink-0" />
+            <Cloud className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-slate-200 font-medium">OpenAI</p>
-              <p className="text-slate-500">{OPENAI_MODEL}{!keyAvailable ? ' · no key' : ''}</p>
+              <p className="text-slate-200 font-medium">Gemini (AI Studio)</p>
+              <p className="text-slate-500">{GEMINI_MODEL}{!keyAvailable ? ' · no key' : ''}</p>
             </div>
-            {isOpenAI && <Check className="w-3.5 h-3.5 text-green-400" />}
+            {isGemini && <Check className="w-3.5 h-3.5 text-blue-400" />}
           </button>
         </div>
       )}

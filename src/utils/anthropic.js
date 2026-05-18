@@ -1,5 +1,5 @@
 /**
- * LLM utility — supports Ollama (local) and OpenAI
+ * LLM utility — supports Ollama (local) and Google Gemini (AI Studio)
  * All public functions keep identical signatures regardless of provider.
  */
 
@@ -7,17 +7,17 @@ const PROVIDER_STORAGE_KEY = 'ai_provider';
 const OLLAMA_BASE = '';
 
 export const OLLAMA_MODEL = 'llama3.1:8b';
-export const OPENAI_MODEL = 'gpt-4o-mini';
+export const GEMINI_MODEL = 'gemini-2.0-flash';
 
 export const getProvider = () =>
   localStorage.getItem(PROVIDER_STORAGE_KEY) ||
   import.meta.env.VITE_DEFAULT_AI_PROVIDER ||
-  (import.meta.env.VITE_OPENAI_API_KEY ? 'openai' : 'ollama');
+  (import.meta.env.VITE_GEMINI_API_KEY ? 'gemini' : 'ollama');
 
 export const setProvider = (p) => localStorage.setItem(PROVIDER_STORAGE_KEY, p);
 
 export const getModel = () =>
-  getProvider() === 'openai' ? OPENAI_MODEL : OLLAMA_MODEL;
+  getProvider() === 'gemini' ? GEMINI_MODEL : OLLAMA_MODEL;
 
 // ── Health checks ─────────────────────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ export const checkOllama = async () => {
   }
 };
 
-export const hasOpenAIKey = () => Boolean(import.meta.env.VITE_OPENAI_API_KEY);
+export const hasGeminiKey = () => Boolean(import.meta.env.VITE_GEMINI_API_KEY);
 
 // ── Streaming backends ────────────────────────────────────────────────────────
 
@@ -86,33 +86,37 @@ const streamChatOllama = async ({ system, user: userMsg, onChunk }) => {
   }
 };
 
-const streamChatOpenAI = async ({ system, user: userMsg, onChunk }) => {
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-  if (!apiKey) throw new Error('OPENAI_KEY_MISSING');
+const streamChatGemini = async ({ system, user: userMsg, onChunk }) => {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) throw new Error('GEMINI_KEY_MISSING');
 
-  const messages = [];
-  if (system) messages.push({ role: 'system', content: system });
-  messages.push({ role: 'user', content: userMsg });
+  const body = {
+    contents: [{ role: 'user', parts: [{ text: userMsg }] }],
+  };
+  if (system) {
+    body.systemInstruction = { parts: [{ text: system }] };
+  }
 
   let res;
   try {
-    res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({ model: OPENAI_MODEL, messages, stream: true }),
-    });
+    res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:streamGenerateContent?alt=sse&key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }
+    );
   } catch {
-    throw new Error('OPENAI_NETWORK_ERROR');
+    throw new Error('GEMINI_NETWORK_ERROR');
   }
 
   if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    if (res.status === 401) throw new Error('OPENAI_INVALID_KEY');
-    if (res.status === 429) throw new Error('OPENAI_RATE_LIMIT');
-    throw new Error(`OpenAI error ${res.status}: ${body}`);
+    const bodyText = await res.text().catch(() => '');
+    if (res.status === 400) throw new Error('GEMINI_INVALID_REQUEST');
+    if (res.status === 403) throw new Error('GEMINI_INVALID_KEY');
+    if (res.status === 429) throw new Error('GEMINI_RATE_LIMIT');
+    throw new Error(`Gemini error ${res.status}: ${bodyText}`);
   }
 
   const reader = res.body.getReader();
@@ -128,19 +132,19 @@ const streamChatOpenAI = async ({ system, user: userMsg, onChunk }) => {
     for (const line of lines) {
       if (!line.startsWith('data: ')) continue;
       const data = line.slice(6).trim();
-      if (data === '[DONE]') return;
+      if (!data || data === '[DONE]') continue;
       try {
         const json = JSON.parse(data);
-        const content = json.choices?.[0]?.delta?.content;
-        if (content) onChunk(content);
+        const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) onChunk(text);
       } catch { /* skip */ }
     }
   }
 };
 
 const streamChat = (args) =>
-  getProvider() === 'openai'
-    ? streamChatOpenAI(args)
+  getProvider() === 'gemini'
+    ? streamChatGemini(args)
     : streamChatOllama(args);
 
 // ── Public API ────────────────────────────────────────────────────────────────
