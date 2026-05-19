@@ -1,5 +1,128 @@
 import { setItem, getItem, getGlobal, setGlobal } from './storage.js';
 
+const FINANCIAL_PLAN_DOC = {
+  id: 'fin-plan-1',
+  title: '5-Year Financial Projection',
+  description: '5-year revenue & expenditure projections, funding requirements, and break-even analysis',
+  clearance: 'L3',
+  category: 'Finance',
+  type: 'TXT',
+  size: '6 KB',
+  uploadedBy: 'u1',
+  uploadedAt: '2025-01-01',
+  content: `5-YEAR FINANCIAL PROJECTION
+
+=== INSTRUCTIONS ===
+
+How to use this workbook:
+1. Use the Revenue Projection sheet to enter products/services, estimated units sold, and average price per item for each year.
+2. Use the Expenditure Projection sheet to enter all expected costs. The detailed expenditure rows are intentionally left blank.
+3. The 5-Year Summary sheet automatically calculates total revenue, total expenditures, net profit/loss, and profit margin.
+4. Yellow cells are input cells that founders should complete. Formula cells should not be overwritten.
+5. The template is suitable for online stores, digital services, marketplaces, subscription businesses, and other e-business models.
+
+Suggested online-business expenditure categories:
+- Website / e-commerce platform
+- Domain and hosting
+- Payment processing fees
+- Digital marketing and paid ads
+- Content creation
+- Packaging
+- Delivery / logistics
+- Inventory / cost of goods sold
+- Software subscriptions
+- Freelancers / salaries
+- Customer service
+- Accounting / legal
+- Other operating expenses
+
+=== REVENUE PROJECTION ===
+
+Revenue Projection — Units Sold × Price per Item
+
+Product / Service                     | Y1 Units | Y1 Price (€) | Y1 Rev (€) | Y2 Units | Y2 Price (€) | Y2 Rev (€) | Y3 Units | Y3 Price (€) | Y3 Rev (€) | Y4 Units | Y4 Price (€) | Y4 Rev (€) | Y5 Units | Y5 Price (€) | Y5 Rev (€)
+Enterprise SaaS Subscription          |        5 |       12,000 |     60,000 |       10 |       13,000 |    130,000 |       18 |       14,000 |    252,000 |       30 |       15,000 |    450,000 |       45 |       16,000 |    720,000
+API Access Licensing                  |        5 |        3,000 |     15,000 |       10 |        4,000 |     40,000 |       18 |        5,000 |     90,000 |       30 |        6,000 |    180,000 |       45 |        7,000 |    315,000
+Custom Enterprise Deployment          |        2 |        8,000 |     16,000 |        4 |       10,000 |     40,000 |        6 |       12,000 |     72,000 |        8 |       14,000 |    112,000 |       10 |       15,000 |    150,000
+Premium Support & Compliance Package  |        3 |        2,500 |      7,500 |        5 |        3,000 |     15,000 |        8 |        4,000 |     32,000 |       12 |        5,000 |     60,000 |       18 |        6,000 |    108,000
+AI Workflow Automation Add-ons        |        4 |        3,500 |     14,000 |        6 |        4,700 |     28,200 |       10 |        5,000 |     50,000 |       16 |        5,500 |     88,000 |       23 |        6,000 |    138,000
+
+TOTAL REVENUE                         |          |              |    112,500 |          |              |    253,200 |          |              |    496,000 |          |              |    890,000 |          |              |  1,431,000
+
+=== EXPENDITURE PROJECTION ===
+
+Expenditure Projection — 5 Years
+
+Expenditure Category / Cost Item      | Notes                                | Year 1 (€) | Year 2 (€) | Year 3 (€) | Year 4 (€) | Year 5 (€)
+Cloud Computing Infrastructure        | GPU servers, cloud hosting, AI infer |     15,000 |     25,000 |     40,000 |     60,000 |     85,000
+Software Development                  | Engineers and developers             |     30,000 |     45,000 |     70,000 |    100,000 |    140,000
+AI Research & Model Optimization      | AI specialists and testing           |     10,000 |     18,000 |     30,000 |     45,000 |     60,000
+Security & Compliance                 | Security audits and certifications   |      5,000 |      8,000 |     12,000 |     18,000 |     25,000
+Sales & Marketing                     | Enterprise outreach and advertising  |      8,000 |     15,000 |     25,000 |     40,000 |     60,000
+Customer Support                      | Client onboarding and SLA support    |      4,000 |      7,000 |     12,000 |     18,000 |     28,000
+Legal & Accounting                    | Company registration and contracts   |      3,000 |      4,000 |      5,000 |      7,000 |      8,000
+Software Tools & Subscriptions        | Dev tools, collaboration tools       |      2,500 |      4,000 |      6,000 |      8,000 |     10,000
+Office & Administrative Costs         | Operational expenses                 |      2,500 |      4,000 |      5,000 |      7,000 |      9,000
+Integration & Deployment Costs        | Enterprise integration support       |      5,000 |      9,000 |     15,000 |     22,000 |     35,000
+Salaries & Wages                      | Employee salaries                    |     52,000 |     87,000 |    138,000 |    203,000 |    282,000
+
+TOTAL EXPENDITURES                    |                                      |    137,000 |    226,000 |    358,000 |    528,000 |    742,000
+
+=== 5-YEAR SUMMARY ===
+
+5-Year Financial Summary
+
+Metric                | Year 1 (€) | Year 2 (€) | Year 3 (€) | Year 4 (€) | Year 5 (€) | Total 5 Years (€)
+Total Revenue         |    112,500 |    253,200 |    496,000 |    890,000 |  1,431,000 |        3,182,700
+Total Expenditures    |    137,000 |    226,000 |    358,000 |    528,000 |    742,000 |        1,991,000
+Net Profit / Loss     |    -24,500 |     27,200 |    138,000 |    362,000 |    689,000 |        1,191,700
+
+=== INITIAL FUNDING REQUIREMENTS ===
+
+Use of Funds                      | Amount (€) | Notes
+Platform Development / Coding     |     20,000 | MVP development
+Cloud Infrastructure Setup        |      8,000 | Initial hosting and compute
+AI Model/API Costs                |      5,000 | Initial AI integration costs
+Branding & Website                |      3,000 | Company identity and website
+Legal / Registration              |      2,500 | Company setup and contracts
+Marketing Launch Budget           |      6,000 | Initial customer acquisition
+Security & Compliance Setup       |      4,000 | Security framework and audits
+Software Licenses & Tools         |      2,500 | Collaboration and development tools
+Emergency / Reserve Capital       |      4,000 | Operational buffer
+TOTAL PLANNED USE                 |     55,000 |
+
+Funding Sources:
+- Founders' own investment:   €10,000
+- Family / friends contribution: €5,000
+- Bank loan:                  €10,000
+- Investor / partner funding: €20,000
+- Grant / startup support:     €7,000
+- Other funding:               €3,000
+TOTAL FUNDING:                €55,000
+
+Tip: Initial funding should cover launch costs and the first operating months.
+
+=== BREAK-EVEN ANALYSIS ===
+
+Break-even Point Template
+
+Inputs:
+- Selling price per unit:         €12,000  (average price per product/service sold)
+- Variable cost per unit:          €3,000  (cost per sale: product, packaging, payment fee, delivery)
+- Contribution margin per unit:    €9,000  (selling price - variable cost)
+- Fixed costs for the period:     €85,000  (fixed costs: website, software, salaries, rent, ads)
+
+Break-even Results:
+- Break-even units:    9.44 units   (number of units that must be sold to cover all costs)
+- Break-even revenue: €113,333      (revenue needed to cover all costs)
+
+Formula: Break-even units = Fixed costs ÷ (Selling price per unit - Variable cost per unit)
+
+Notes:
+* Insert your selling price, variable and fixed costs for your business.
+* Please check the results using your critical thinking analysis.`,
+};
+
 export const COMPANIES = [
   {
     id: 'acme-corp',
@@ -38,6 +161,7 @@ const USERS = {
 
 const DOCUMENTS = {
   'acme-corp': [
+    FINANCIAL_PLAN_DOC,
     {
       id: 'd1',
       title: 'New Employee Onboarding Guide',
@@ -374,6 +498,7 @@ Equity: 120,000 options (4-year vest)`,
     },
   ],
   'fintech-inc': [
+    FINANCIAL_PLAN_DOC,
     {
       id: 'd1',
       title: 'Compliance Framework 2024',
@@ -622,6 +747,13 @@ export const seedTenant = (tenantId) => {
   setItem(tenantId, 'documents', DOCUMENTS[tenantId] || []);
   setItem(tenantId, 'azureData', AZURE_DATA[tenantId] || null);
   setItem(tenantId, 'seeded', true);
+};
+
+export const patchTenantDocuments = (tenantId) => {
+  const stored = getItem(tenantId, 'documents', null);
+  if (!stored) return;
+  if (stored.find(d => d.id === FINANCIAL_PLAN_DOC.id)) return;
+  setItem(tenantId, 'documents', [FINANCIAL_PLAN_DOC, ...stored]);
 };
 
 export const ensureCompanies = () => {

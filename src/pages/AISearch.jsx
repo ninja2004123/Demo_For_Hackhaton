@@ -15,6 +15,11 @@ const EXAMPLE_QUERIES = [
   'What does the performance review process look like?',
   'Summarise the engineering onboarding steps',
   'What are the key compliance requirements?',
+  'What is the 5-year revenue projection?',
+  'What are the total funding requirements and sources?',
+  'When do we break even and what is the break-even revenue?',
+  'What are the Year 1 and Year 2 expenditures?',
+  'What is the projected net profit over 5 years?',
 ];
 
 const MarkdownRenderer = ({ text }) => {

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { getItem, setItem } from '../utils/storage.js';
-import { seedTenant } from '../utils/seedData.js';
+import { seedTenant, patchTenantDocuments } from '../utils/seedData.js';
 
 const AuthContext = createContext(null);
 
@@ -11,6 +11,7 @@ export const AuthProvider = ({ tenantId, children }) => {
   useEffect(() => {
     if (!tenantId) { setLoading(false); return; }
     seedTenant(tenantId);
+    patchTenantDocuments(tenantId);
     const saved = sessionStorage.getItem(`vault:session:${tenantId}`);
     if (saved) {
       try { setUser(JSON.parse(saved)); } catch { /* ignore */ }
